@@ -39,8 +39,8 @@ def transcribe_custom(audio_path,src_lang,tar_lang):
         try:
             text = recognizer.recognize_google(audio_data, language=src_lang)
             translation = translator.translate(text, dest=tar_lang)
-            final_transcription+=text
-            final_translation+=translation.text
+            final_transcription+= " " + text
+            final_translation+= " " + translation.text
             # print(translation.text)
         except sr.RequestError as e:
             print(f"Could not request results from Google Speech Recognition service; {e}")
