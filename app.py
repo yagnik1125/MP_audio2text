@@ -69,9 +69,9 @@ st.title("Audio Transcription and Translation App")
 # Audio recorder using streamlit-webrtc
 audio_processor = AudioProcessor()
 webrtc_ctx = webrtc_streamer(
-    key="audio_recorder", 
-    mode="sendrecv", 
-    audio_processor_factory=lambda: audio_processor, 
+    key="audio_recorder",
+    mode="sendrecv",
+    audio_processor_factory=lambda: audio_processor,
     media_stream_constraints={"audio": True}
 )
 
