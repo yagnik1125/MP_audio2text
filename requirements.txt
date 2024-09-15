@@ -1,5 +1,8 @@
 streamlit
-pydub
-googletrans==3.1.0a0
 torch
-speech_recognition 
+tensorflow
+pandas
+pydub
+speechrecognition
+googletrans==3.1.0a0
+numpy
