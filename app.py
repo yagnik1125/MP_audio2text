@@ -4,7 +4,8 @@ import time
 from pydub import AudioSegment
 from io import BytesIO
 import googletrans
-
+from streamlit_webrtc import webrtc_streamer, AudioProcessorBase
+import av
 import torch
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 import googletrans
