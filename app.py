@@ -1,4 +1,8 @@
 import streamlit as st
+import sounddevice as sd
+import numpy as np
+import time
+import wave
 import os
 from pydub import AudioSegment
 import googletrans
@@ -7,7 +11,6 @@ import torch
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 import googletrans
 
-import time
 import speech_recognition as sr
 
 def record_audio(duration=5, fs=16000):
