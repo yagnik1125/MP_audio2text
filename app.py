@@ -2,7 +2,6 @@ import streamlit as st
 
 from pydub import AudioSegment
 import googletrans
-import torchaudio
 
 from tqdm.notebook import tqdm
 import torch
