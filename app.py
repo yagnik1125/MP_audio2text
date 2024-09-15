@@ -2,6 +2,10 @@ import streamlit as st
 
 from pydub import AudioSegment
 import googletrans
+import torchaudio
+
+from tqdm.notebook import tqdm
+import torch
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 import googletrans
 
