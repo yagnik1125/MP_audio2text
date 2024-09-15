@@ -1,5 +1,5 @@
 import streamlit as st
-
+import os
 from pydub import AudioSegment
 import googletrans
 
@@ -10,6 +10,21 @@ import googletrans
 import time
 import speech_recognition as sr
 
+def record_audio(duration=5, fs=16000):
+    st.info("Recording...")
+    audio_data = sd.rec(int(duration * fs), samplerate=fs, channels=1, dtype=np.int16)
+    sd.wait()  # Wait for the recording to finish
+    st.success("Recording complete!")
+    return np.array(audio_data)
+
+# Function to save recorded audio as WAV file
+def save_audio(audio_data, filename="mic_input.wav", fs=16000):
+    with wave.open(filename, 'wb') as wf:
+        wf.setnchannels(1)  # Mono channel
+        wf.setsampwidth(2)  # 16-bit audio
+        wf.setframerate(fs)
+        wf.writeframes(audio_data.tobytes())
+        
 def transcribe_custom(audio_path,src_lang,tar_lang):
     recognizer = sr.Recognizer()
 
@@ -53,6 +68,16 @@ st.title("Audio Transcription and Translation App")
 # Audio file uploader
 audio_file = st.file_uploader("Upload an audio file", type=["mp3", "wav", "ogg", "flac","m4a"])
 
+if st.button("🎤 Record Audio"):
+    # Record audio from microphone for 5 seconds
+    recorded_audio = record_audio(duration=5)
+
+    # Save audio to a file
+    save_audio(recorded_audio)
+
+    # Display success message and file location
+    st.success("Audio recorded and saved as 'mic_input.wav'.")
+    
 # Language selector
 languages = googletrans.LANGUAGES
 language_options = list(languages.values())
