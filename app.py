@@ -1,114 +1,93 @@
 import streamlit as st
+
+import time
+from pydub import AudioSegment
+from io import BytesIO
+import googletrans
 from streamlit_webrtc import webrtc_streamer, AudioProcessorBase
 import av
-from pydub import AudioSegment
-import io
-import numpy as np
+import torch
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 import googletrans
+
 import speech_recognition as sr
-import os
-
-class AudioProcessor(AudioProcessorBase):
-    def __init__(self):
-        self.audio_buffer = []
-
-    def recv(self, frame: av.AudioFrame):
-        # Convert audio frame to numpy array
-        audio_data = frame.to_ndarray()
-        self.audio_buffer.append(audio_data)
-        return frame
-
-    def get_audio_data(self):
-        # Combine all audio frames into one numpy array
-        if self.audio_buffer:
-            audio_data = np.concatenate(self.audio_buffer, axis=0)
-            return audio_data
-        return None
-
-def save_audio(audio_data, file_path):
-    # Save the numpy array as a WAV file
-    with io.BytesIO() as wav_buffer:
-        wav_segment = AudioSegment(
-            data=audio_data.tobytes(),
-            sample_width=2,  # 16-bit audio
-            frame_rate=16000,
-            channels=1
-        )
-        wav_segment.export(wav_buffer, format="wav")
-        with open(file_path, "wb") as f:
-            f.write(wav_buffer.getvalue())
-
-def transcribe_custom(audio_path, src_lang, tar_lang):
+        
+def transcribe_custom(audio_path,src_lang,tar_lang):
     recognizer = sr.Recognizer()
+
+    # Convert audio to WAV format using pydub (since SpeechRecognition works best with WAV files)
     audio = AudioSegment.from_file(audio_path)
-    audio = audio.set_channels(1)
-    audio = audio.set_frame_rate(16000)
+    audio = audio.set_channels(1)  # Ensure mono channel
+    audio = audio.set_frame_rate(16000)  # Ensure frame rate is 16000 Hz
     translator = googletrans.Translator()
-    chunk_duration_ms = 10000
+
+    # Split the audio into chunks
+    chunk_duration_ms = 10000  # 10 sec per chunk
     chunks = [audio[i:i + chunk_duration_ms] for i in range(0, len(audio), chunk_duration_ms)]
-    final_transcription = ''
-    final_translation = ''
+
+    final_transcription=''
+    final_translation=''
+
     for i, chunk in enumerate(chunks):
-        chunk_filename = f"chunk_{i}.wav"
+        chunk_filename = f"chunk.wav"
         chunk.export(chunk_filename, format="wav")
+
+        # Use the SpeechRecognition library to process the WAV file
         with sr.AudioFile(chunk_filename) as source:
             audio_data = recognizer.record(source)
+
         try:
             text = recognizer.recognize_google(audio_data, language=src_lang)
             translation = translator.translate(text, dest=tar_lang)
-            final_transcription += text + ' '
-            final_translation += translation.text + ' '
+            final_transcription+=text
+            final_translation+=translation.text
+            # print(translation.text)
         except sr.RequestError as e:
-            st.error(f"Could not request results from Google Speech Recognition service; {e}")
+            print(f"Could not request results from Google Speech Recognition service; {e}")
         except sr.UnknownValueError:
-            st.error("Google Speech Recognition could not understand the audio")
-    return final_transcription, final_translation
+            print("Google Speech Recognition could not understand the audio")
+    return final_transcription,final_translation
+
+
 
 st.title("Audio Transcription and Translation App")
 
-# Audio recorder using streamlit-webrtc
-audio_processor = AudioProcessor()
-webrtc_ctx = webrtc_streamer(
-    key="audio_recorder",
-    mode="sendrecv",
-    audio_processor_factory=lambda: audio_processor,
-    media_stream_constraints={"audio": True}
-)
-
-if st.button("Save Recorded Audio"):
-    audio_data = audio_processor.get_audio_data()
-    if audio_data is not None:
-        save_audio(audio_data, "recorded_audio_file.wav")
-        st.write("Audio recorded and saved as 'recorded_audio_file.wav'.")
-    else:
-        st.write("No audio recorded yet.")
-
 # Audio file uploader
-uploaded_file = st.file_uploader("Upload an audio file", type=["mp3", "wav", "ogg", "flac", "m4a"])
+audio_file = st.file_uploader("Upload an audio file", type=["mp3", "wav", "ogg", "flac","m4a"])
 
+# if st.button("🎤 Record Audio"):
+#     # Record audio from microphone for 5 seconds
+#     recorded_audio = record_audio(duration=5)
+#     # Save audio to a file
+#     save_audio(recorded_audio)
+#     # Display success message and file location
+#     st.success("Audio recorded and saved as 'mic_input.wav'.")
+    
 # Language selector
 languages = googletrans.LANGUAGES
 language_options = list(languages.values())
 selected_lang_src = st.selectbox("Select the translation language source", language_options)
 selected_lang_tar = st.selectbox("Select the translation language target", language_options)
 
-# Button to trigger transcription and translation
+# Button to trigger transcription
 if st.button("Transcribe and Translate"):
-    if uploaded_file is not None:
+    if audio_file is not None:
         # Save the uploaded file temporarily
         with open("temp_audio_file", "wb") as f:
-            f.write(uploaded_file.getbuffer())
-        audio_path = "temp_audio_file"
-    else:
-        audio_path = "recorded_audio_file.wav"  # Use recorded file if uploaded file is not provided
+            f.write(audio_file.getbuffer())
 
-    if os.path.exists(audio_path):
+        # Get the language code for the selected language
         selected_lang_code_src = list(languages.keys())[language_options.index(selected_lang_src)]
         selected_lang_code_tar = list(languages.keys())[language_options.index(selected_lang_tar)]
-        transcription, translation = transcribe_custom(audio_path, selected_lang_code_src, selected_lang_code_tar)
+
+        # Transcribe and translate
+        transcription, translation = transcribe_custom("temp_audio_file", selected_lang_code_src,selected_lang_code_tar)
+
+        # Display results
         st.subheader("Transcription:")
         st.write(transcription)
+
         st.subheader("Translation:")
         st.write(translation)
     else:
-        st.error("Please upload an audio file or record audio.")
+        st.error("Please upload an audio file.")
