@@ -1,26 +1,17 @@
 import streamlit as st
-import os
-import numpy as np
 
-try:
-    import tensorflow  # required in Colab to avoid protobuf compatibility issues
-except ImportError:
-    pass
-
-import torch
-import pandas as pd
-import whisper
-import torchaudio
-
-from tqdm.notebook import tqdm
-
+import time
 from pydub import AudioSegment
+from io import BytesIO
+import googletrans
+from streamlit_webrtc import webrtc_streamer, AudioProcessorBase
+import av
+import torch
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 import googletrans
 
-import time
 import speech_recognition as sr
-
+        
 def transcribe_custom(audio_path,src_lang,tar_lang):
     recognizer = sr.Recognizer()
 
@@ -48,8 +39,12 @@ def transcribe_custom(audio_path,src_lang,tar_lang):
         try:
             text = recognizer.recognize_google(audio_data, language=src_lang)
             translation = translator.translate(text, dest=tar_lang)
-            final_transcription+=text
-            final_translation+=translation.text
+            st.subheader(f"Transcription chunk {i}:")
+            st.write(text)
+            st.subheader(f"Translation chunk {i}:")
+            st.write(translation.text)
+            final_transcription+= " " + text
+            final_translation+= " " + translation.text
             # print(translation.text)
         except sr.RequestError as e:
             print(f"Could not request results from Google Speech Recognition service; {e}")
@@ -59,11 +54,19 @@ def transcribe_custom(audio_path,src_lang,tar_lang):
 
 
 
-st.title("Audio Transcription and Translation App")
+st.title("Audio Transcription and Translation App 1 1 ")
 
 # Audio file uploader
 audio_file = st.file_uploader("Upload an audio file", type=["mp3", "wav", "ogg", "flac","m4a"])
 
+# if st.button("🎤 Record Audio"):
+#     # Record audio from microphone for 5 seconds
+#     recorded_audio = record_audio(duration=5)
+#     # Save audio to a file
+#     save_audio(recorded_audio)
+#     # Display success message and file location
+#     st.success("Audio recorded and saved as 'mic_input.wav'.")
+    
 # Language selector
 languages = googletrans.LANGUAGES
 language_options = list(languages.values())
