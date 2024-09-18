@@ -9,6 +9,11 @@ import av
 import torch
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 import googletrans
+from streamlit_mic_recorder import mic_recorder
+from pydub import AudioSegment
+import tempfile
+import wave
+import io
 
 import speech_recognition as sr
         
@@ -54,7 +59,7 @@ def transcribe_custom(audio_path,src_lang,tar_lang):
 
 
 
-st.title("Audio Transcription and Translation App 1 1 ")
+st.title("Audio Transcription and Translation App")
 
 # Audio file uploader
 audio_file = st.file_uploader("Upload an audio file", type=["mp3", "wav", "ogg", "flac","m4a"])

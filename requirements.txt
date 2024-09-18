@@ -9,3 +9,4 @@ numpy
 sounddevice
 numpy
 streamlit-webrtc
+streamlit-mic-recorder
