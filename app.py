@@ -39,6 +39,10 @@ def transcribe_custom(audio_path,src_lang,tar_lang):
         try:
             text = recognizer.recognize_google(audio_data, language=src_lang)
             translation = translator.translate(text, dest=tar_lang)
+            st.subheader(f"Transcription chunk {i}:")
+            st.write(transcription)
+            st.subheader(f"Translation chunk {i}:")
+            st.write(transcription)
             final_transcription+= " " + text
             final_translation+= " " + translation.text
             # print(translation.text)
