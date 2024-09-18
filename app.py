@@ -63,14 +63,25 @@ st.title("Audio Transcription and Translation App")
 
 # Audio file uploader
 audio_file = st.file_uploader("Upload an audio file", type=["mp3", "wav", "ogg", "flac","m4a"])
+#mic input
+mic_audio = mic_recorder(start_prompt="🎙️ Start Recording", stop_prompt="🎙️ Stop Recording", key='recorder')
+if mic_audio:
+    st.write("mic audio through bytes")
+    st.audio(mic_audio['bytes'], format='wav')
+mic_audio_file_name='temp_mic_audio.wav'
+if mic_audio:
+    # Get the byte data from the audio recorder
+    audio_bytes = mic_audio['bytes']
+    audio_file_like = io.BytesIO(audio_bytes)
+    with wave.open(mic_audio_file_name, 'wb') as wav_file:
+        sample_width = 2  # Sample width in bytes (16 bits)
+        channels = 1      # Mono
+        framerate = 44100 # Sample rate
 
-# if st.button("🎤 Record Audio"):
-#     # Record audio from microphone for 5 seconds
-#     recorded_audio = record_audio(duration=5)
-#     # Save audio to a file
-#     save_audio(recorded_audio)
-#     # Display success message and file location
-#     st.success("Audio recorded and saved as 'mic_input.wav'.")
+        wav_file.setnchannels(channels)
+        wav_file.setsampwidth(sample_width)
+        wav_file.setframerate(framerate)
+        wav_file.writeframes(audio_bytes)
     
 # Language selector
 languages = googletrans.LANGUAGES
@@ -84,6 +95,27 @@ if st.button("Transcribe and Translate"):
         # Save the uploaded file temporarily
         with open("temp_audio_file", "wb") as f:
             f.write(audio_file.getbuffer())
+
+        # Get the language code for the selected language
+        selected_lang_code_src = list(languages.keys())[language_options.index(selected_lang_src)]
+        selected_lang_code_tar = list(languages.keys())[language_options.index(selected_lang_tar)]
+
+        # Transcribe and translate
+        transcription, translation = transcribe_custom("temp_audio_file", selected_lang_code_src,selected_lang_code_tar)
+
+        # Display results
+        st.subheader("Transcription:")
+        st.write(transcription)
+
+        st.subheader("Translation:")
+        st.write(translation)
+    elif mic_audio is not None:
+        audio_file_like.seek(0)
+        buffer_data = audio_file_like.read()
+        # Save the uploaded file to a temporary directory
+        with open("temp_audio_file", "wb") as f:
+            f.write(buffer_data)
+        audio_path = "temp_audio_file"
 
         # Get the language code for the selected language
         selected_lang_code_src = list(languages.keys())[language_options.index(selected_lang_src)]
