@@ -1,0 +1,11 @@
+streamlit
+torch
+tensorflow
+pandas
+pydub
+speechrecognition
+googletrans==3.1.0a0
+numpy
+sounddevice
+numpy
+streamlit-webrtc
